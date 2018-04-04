@@ -1,0 +1,317 @@
+---
+title: "BDCD Econometrics Lab"
+author: Prepared by Catherine Forbes
+output:
+  html_document: default
+  classoption: a4paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+# Preliminaries
+Welcome to the Big Data Challenge Day and to the Econometrics Lab!
+
+Before you start your challenge, you will need to complete each of the following steps (If you have any trouble, speak to one of the mentors or a lab assistant):
+
+1. Log in to a computer using your Monash student ID and password. 
+
+2. Open **RStudio** on your computer.  
+
+3. Go to https://github.com/BDCD18/Emtrx webpage and **download** the files there (under the green **Clone or download** button). This will produce a files named **Emtrx-master.zip**, which you can save to the **Desktop** on your computer. 
+
+4. Unzip the **Emtrx-master.zip** file, and save all files to the Desktop.
+
+5. In **RStudio**, open the **BDCD_Emtrx_Lab.Rmd** file from the location on the Desktop.
+
+6. In **RStudio**, go to **Session/ Set working directory/ To source file location**. 
+
+7. In **RStudio**, go to **File/ Open file...** and select the **BDCD_Emtrx_Lab.Rmd** file. 
+
+8. In **RStudio**, go to **File/ Save as...** to create a new copy of your BDCD_Emtrx_Lab.Rmd file **with a different name** so that you don't overwrite the original. Use this copy for your work.
+
+9. Install the the **four R packages** using the **Packages** window in the bottom right hand corner of the **RStudio** environment.You can use the default location for the **Install to Library** location, and keep the box ticked for **Install dependencies**. If asks you to restart R prior to installing these packages, answer **Yes**. The **four R packages** are:
+
+* **knitr**
+
+* **readxl**
+
+* **stringi**
+
+* **tidyverse**
+
+10. In the **RStudio Console window** (in the lower left corner), type **library(knitr)** at the **>** prompt and hit **Enter**.
+
+## How to use the .Rmd file
+
+* The printed document you received was produced using the **BDCD_Emtrx_Lab.Rmd** file.  You will also be using your (renamed) copy of this .Rmd file to complete your analysis in **RStudio**!
+
+* You can run your .Rmd file in **RStudio** to produce either a Word document (.docx), a PDF document or an HTML document that can be opened up in your web browser. 
+
+11. Before you get started, once you have completed the **10 steps above**, you should try to run your .Rmd file by selecting either the **Knitr button** (Knit to html) on the top of the .Rmd file, or by pressing **Ctrl-Alt-R** (to "Run all"). If you  have any trouble, ask for some help from your peers, your mentors or from one of the lab assistants (tutors).
+
+* When you are ready to begin **Part 1** below, you will work progressively through this .Rmd file to learn a bit about how regression models are used in econometrics. 
+
+* You should work together with your team to answer the questions posed throughout the .Rmd file. These will help you and your team to be ready to work on the **Team Challenge questions in Part 4.** 
+
+* You can run each **R Markdown code chunk**, with the results appearing in the .Rmd file itself. To do this, move the cursor to a section that starts with a line with three left open quotes and ends with again three left open quotes and press **Ctrl-Shift-Enter**. 
+
+* Here is an example of a **code chunk**:
+```{r chunkname, echo = TRUE}
+# ```{r chunkname, echo = TRUE}
+# This is a code chunk.
+# ```
+``` 
+
+* You can also just run the entire .Rmd file, using **Ctrl-Alt-R** or the **Knitr** button, as described in Step 11 above.
+
+=====================================================================
+
+**NOTE**: If for any reason you need to restart your machine, **your saved files will not be recovered!** Be sure to save them to one of the Lab USB sticks (or email to yourself or your mentor) before completing the Challenge. 
+
+=====================================================================
+
+# Part 1: The data
+Once you have completed the preliminary section above, you are ready to begin your econometric data analysis! 
+
+### Let's get the data into **R**
+Run this code chunk to activate the two new packages and read in the data file. 
+
+```{r read_data}
+library(readxl)
+library(stringi)
+library(tidyverse)
+
+wva <- data.frame(read_csv("data_WVAfrica.csv"), row.names=1)
+
+wva$region <- factor(wva$region, labels = c("Kenya A", "Kenya B", "Tazania A", "Tanzania B", "Uganda A",  "Uganda B"))
+
+wva$csec <- factor(wva$csec, labels = c("FALSE", "TRUE"))
+
+wva$all_school <- factor(wva$all_school, labels = c("FALSE", "TRUE"))
+```
+
+### The datafile *wva*
+
+You can look directly at the dataset by clicking on the *wva* object in the **Environment window** in the upper right corner of **RStudio**.
+
+Each row of *wva* corresponds to a unique household, and the columns of *wva* contains the variables, defined as follows:
+
+ * **hh_ID**: Household ID number
+ 
+ * **n_hh**: Number of members in the household
+  
+ * **n_waa**: Number of working adults in household
+ 
+ * **n_child**: Number of children in household
+ 
+ * **n_aged**: Number of adults aged 60 years or older in household
+ 
+ * **csec**: Head of household has completed secondary school (0 = FALSE, 1 = TRUE)
+ 
+ * **all_school**: All children in household attend school (0 = FALSE, 1 = TRUE)
+ 
+ * **region**: Geographical region ("Kenya A", "Kenya B", "Tanzania A", "Tanzania B", "Uganda A", or "Uganda B")
+ 
+ * **cropprod**: Crop production (in tonnes), reported for 2014
+ 
+ * **landsize**: Size of household land (in hectares)
+ 
+ * **mo_lowfood**: Number of months in 2014 where household experienced food shortage
+
+
+#### Q1: How many households are in this dataset?
+
+```{r numrows}
+nrow(wva)
+```
+
+Here "nrow()" is an **R** function that counts the number of rows in a matrix or datafile. 
+
+#### Q2: What do you think the "[1]" before the value 1713 represents?
+
+### Crop Production Histogram
+Let's focus now only on the *cropprod* variable, 
+using the **$** feature that identifies the individual series in the data frame *wva*.
+Let's plot a **histogram** of the *cropprod* series. 
+
+```{r hist}
+
+ggplot(data = wva, aes(cropprod)) + 
+  geom_histogram(binwidth=0.5, colour="blue", fill="lightblue") + 
+  labs(x = "Crop production (tonnes)") 
+```
+
+Histograms are good for **continuous** variables, that take on a wide range of values. 
+
+#### Q3: What do you learn from the histogram? 
+
+#### Q4: Which other variables in the *wva* dataset would be appropriate to graph with a **histogram**? Can you create a **histogram** for these other variables in *wva* dataset? 
+
+## Regions Barchart
+There are six different regions in our study. These regions divide the different households in the study into separate groups. How many observations are in each region? Let's find out by summarising using a **barchart**.
+
+```{r barchart}
+
+# A bar chart showing the number of households in the study, by region
+ggplot(data = wva) +
+  geom_bar(mapping = aes(x = region), colour = "purple4", fill="lightblue")
+
+```
+
+Barcharts are good for **categorical** variables, where the value can take on only a limited number of possible values. These are useful to define groups in the data. 
+
+By the way, **R** calls such a grouping variable a **factor**, and the group labels are referred to as factor **levels**.  
+
+#### Q5: Which other variables in the *wva* dataset would be appropriate to graph with a **barchart**? Can you create a **barchat** for these other variables in *wva* dataset? 
+
+## Summary statistics and histograms, by factor levels
+
+We can use factor variables to separate responses into groups. Here we consider some summary statistics for the *cropprod* (crop production) variable, by region, and also plot the histograms of the *cropprod* for each region in what is called a **facet_wrap** display. 
+
+```{r cropprod_by_region}
+# some summary statistics of cropprod, by region
+wva %>% group_by(region) %>% summarise(n = n(), mean = mean(cropprod), median = median(cropprod), min = min(cropprod), max = max(cropprod))
+
+# histograms of cropprod, by region
+ggplot(data = wva, mapping = aes(x = cropprod, fill = region)) +
+  geom_histogram(binwidth = 0.5, alpha= 0.5) +
+  facet_wrap(~ region, nrow = 3) +
+  labs(x = "Crop production (tonnes)") 
+```
+
+#### Q6: How does the distribution of *cropprod* look different (or not) across the different regions?
+
+Now let's see if we can understand what drives some of these values of *cropprod*. 
+with first producing some summary statistics for *cropprod* for each group, and also producing the the boxplots of *cropprod* by region.
+
+=====================================================================
+
+# Part 2: Correlation and simple linear regression between land size and crop production
+
+Let's look at the relationship between crop production and land size. Both of these variables may be considered as **continuous** variables. We can use correlation to measure the linear relationship between two continuous variables. 
+
+First let's do a simple **scatterplot**
+
+```{r scatter1}
+ggplot(data = wva, aes(x = landsize,y = cropprod)) + 
+  geom_point(colour = "purple4") +  labs(x = "Land size (hectares)", y = "Crop production (tonnes)")
+```
+
+What is the (sample) correlation between landsize and cropprod? We can calculate it.
+```{r correlation1}
+wva %>% summarise(cor = cor(cropprod, landsize))
+```
+
+#### Q7: How is the sample correlation calculated? What does it represent?
+
+To find the best fitting (in a least-squares sense!) line through these points, 
+we need to do a linear regression using the **lm** function:
+
+```{r}
+lm1 <- lm(cropprod ~ landsize, data = wva)
+lm1
+```
+
+#### Q8: What is the equation for the fitted regression line? 
+
+Let's put the fitted regression line on top of the scatterplot. 
+
+```{r scatterfit1}
+ggplot(data = wva, aes(x = landsize, y = cropprod)) + 
+  geom_point(colour = "purple4") +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Land size (hectares)", y = "Crop production (tonnes)") 
+```
+
+## Does the relationship appear to be statistically significant?
+
+
+The fitted regression line is only a summary of the relationship between *cropprod* and *landsize*. Is there evidence that the apparent relationship has occurred only by chance?
+
+In particular, we want to know if the coefficient for *landsize* is **statistically different from zero**. 
+
+We can check the **statistical significance** of the linear regression line using the **summary** command:
+
+```{r}
+summary(lm1)
+```
+
+Remember our discussion of **statistical significance**. 
+
+An **estimate** of a population coefficient is said to be **significantly different from zero** if it has a **p-value** that is very small. Here the p-value is indicated by the second last column, under "Pr(>|t|)". 
+
+The **p-value** indicates the chance of seeing an estimated value as big as (or bigger than) what was actually observed **if the true population coefficient was, in fact, really equal to zero**.
+
+Those **p-values** that are smaller than 0.001 are marked with three asterisks ("***"). This is quite strong evidence that the true coefficient is not zero. 
+
+We can look at the **sign** of the reported coefficient to see whether the relationship is **positive or negative**.
+
+
+#### Q9: What can you say about the statistical significance of the coefficient for landsize here? 
+
+=====================================================================
+
+# Part 3: Many predictors
+
+Now that we see how the regression works with a single predictor (or explanatory) variable, let's see what happens when all of our variables are included. 
+
+When there is more than one predictor variable, we refer to the regression as a **multiple linear regression (MLR) model**.
+```{r mlr_1}
+mlr1 <- lm(cropprod ~ landsize + n_waa + n_child + n_aged + mo_lowfood, data = wva)
+summary(mlr1)
+```
+
+#### Q10: What is the estimated regression equation reported in **mlr1**?
+
+#### Q11: From the **mlr1** model above, which variables appear to be strongly related to *cropprod*? Holding other variables fixed, do these relationships appear to be **positive** or **negative**?
+
+## What about region?
+
+What happens when we include **region** in the regression? 
+
+```{r mlr_2}
+mlr2 <- lm(cropprod ~ landsize + n_waa + n_child + n_aged + mo_lowfood + region, data = wva)
+summary(mlr2)
+```
+
+Notice that we now have **5** extra coefficients, corresponding to **Kenya B**, **Tanzania A**, **Tanzania B**, **Uganda A** and **Uganda B**. 
+
+It turns out that when running a regression model in **R** using a "factor" (or categorical) variable, like **region**, then it fits a different model **intercept term** to each factor **level**. When reporting the results, the **Intercept** coefficient corresponds to the intercept for the first category level only. This first category is called the **reference category**. 
+
+Each of the other intercept coefficients for the remaining categories are reported relative to the reference category, so to get these we need to add the reference **Intercept** to the report coefficient **estimate** for the desired category.
+
+So here, the first region is **Kenya A**, and so is the **reference** region. To report a fitted line for **Kenya A** we use the estimated intercept term given in the row labelled **(Intercept)**.
+
+To report a fitted line for any of the other regions, we have to add the corresponding **Estimate** value to this **(Intercept)** value. 
+
+For example, the estimated intercept for **Kenya B** would be **1.35507 - 1.16841**, or **0.18666**.
+
+#### Q12: From the MLR model above (in mlr2) what is the fitted model for crop production for households in the Tanzania B region?
+
+=====================================================================
+
+# Part 4: YOUR TEAM CHALLENGE
+
+**Produce a short presentation** (about 3-4 slides!) to summarise your group's responses to each of the following questions. To produce your slides, you may use any available packages (e.g. Word, Powerpoint, Rmarkdown, etc...) Be sure to discuss your idea with everyone in your group, including your group mentor.
+
+#### 1: Which of the available predictor variables you think are most important for explaining household crop production, and why?
+
+#### 2: Estimate a new MLR that contains only the predictor variables you think are most important for explaining *cropprod*.
+
+[Hint: Copy and past the code chunk named **mlr_2** above here, then rename the copied version and modify the equation. You can do this a few times until you to find your **best model**.]
+
+#### 3: Report your estimated regression equation. If your equation includes **region** or one of the other factor variables, report an equation for each factor level (or factor level combination).
+
+#### 4: Use your preferred model to predict expected crop production for a "typical household" in region **Tanzania A**, where all children go to school and where the head of the household completed secondary school. 
+
+#### 5: Can you think of any other information that could have been collected for this study, that might have also been useful to understand crop production of households?
+
+#### 6: Suggest whether there is evidence that a policy change, monetary or other assistance might improve on the crop production of households in these regions of Africa.
+[Hint for 5 and 6: You can speculate here - brainstorm with your team to see what you can come up with!]
+
+#### 7. **Choose a team name** for your submission, but remember to also include your individual names. (You might add these to the **author** field at the top of your .Rmd file.) 
+
+
+
+
